@@ -1,26 +1,31 @@
 # MusCoRe Benchmark Suite
+
 **Built in Cape Town, South Africa.**
 
 ## What MusCoRe is
-A binary serialisation standard using bijective bit-packing to encode structured event data into 16-bit integers. Each event (zone, direction, velocity) is packed into 2 bytes instead of verbose JSON.
 
-## What the benchmarks confirm
-- **97.8%** compression on standard event data
-- Up to **1,294× faster** than equivalent JSON (1.5 ms for 1M events in throttle test)
-- Significant theoretical GPU/thermal savings in simulation models
+A binary serialisation standard using bijective bit-packing to encode structured event data into fixed-width byte sequences. Each event (zone, direction, velocity, etc.) is packed into 3-4 bytes based on a fixed per-type schema, instead of a self-describing format like JSON.
 
-## What the thermal / dual-particle scripts model
-Simulation only — not measured on physical VR hardware.
+## What the benchmark confirms
 
-## What needs independent lab testing
-- Real VR headset thermal measurements
-- Integration with actual rendering pipelines
-- Physical network transmission benchmarks
+Measured by binary_benchmark.py, against a fair baseline (JSON includes only the fields each event type actually uses, no padding):
+
+| Comparison               | Result                                  |
+|---------------------------|------------------------------------------|
+| vs raw JSON                | ~92% smaller                            |
+| vs gzip-compressed JSON     | 45-61% smaller (gap narrows at scale)   |
+| vs MessagePack              | ~88-89% smaller                         |
+| vs CBOR                     | ~89% smaller                            |
+
+The advantage over MessagePack/CBOR comes from MusCoRe using a fixed, known schema, so field names are never transmitted — the same category of advantage Protocol Buffers has over JSON, not raw byte-packing cleverness.
 
 ## How to run
-```bash
-pip install numpy
-python benchmark_muscore.py
-python muscore_throttle_test.py
-python muscore_phase_cooling.py
-python muscore_dual_particle.py
+
+    pip install msgpack cbor2
+    python3 binary_benchmark.py
+
+## Not yet benchmarked
+
+- Encode/decode throughput (no speed claims until this is actually measured)
+- Real-world, non-uniform telemetry data (current data is synthetic, weighted-random)
+- Physical network transmission, VR hardware thermal effects
